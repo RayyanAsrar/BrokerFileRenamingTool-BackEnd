@@ -1,8 +1,8 @@
-const validateSchema = (schema, data) => {
+const validate = (schema, data) => {
   return schema.validate(data);
 };
+export default validate;
 
-export default validateSchema;
 
 // const { value, error } = validateSchema(registerSchema, req.body);
 //     if (error) {
