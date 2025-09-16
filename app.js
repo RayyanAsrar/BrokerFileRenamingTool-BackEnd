@@ -4,8 +4,11 @@ import helmet from "helmet";
 import morgan from "morgan";
 import errorHandler from "./middlewares/error.middleware.js";
 import { authRouter } from "./routes/index.js";
+import connectDB from "./config/db.js";
 
 const app = express();
+
+connectDB()
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
