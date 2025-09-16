@@ -1,4 +1,4 @@
-import { APIError } from "../utils/response";
+import { APIError } from "../utils/response.js";
 
 const errorHandler = (error, req, res, next) => {
   // Log error for debugging
