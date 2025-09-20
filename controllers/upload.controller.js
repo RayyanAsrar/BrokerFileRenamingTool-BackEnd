@@ -10,7 +10,10 @@ const uploadController = {
     const processedFiles = [];
 
     files.forEach((file) => {
-      if (file.mimeType !== "image/*" && file.mimeType !== "application/pdf") {
+      if (
+        !file.mimetype.startsWith("image/") &&
+        file.mimetype !== "application/pdf"
+      ) {
         throw CustomError(
           400,
           `Unsupported file uploaded: ${file.originalname}`
@@ -26,24 +29,15 @@ const uploadController = {
 
       let text;
 
-      if (file.mimeType === "application/pdf") {
-        // Handle Text Extraction using pdf-parse
-        // IF no text found, useTesseract.js for OCR
-        // UpdateText variable
-      }
+      // Upload file to AWS S3 using AWS SDK
 
-      if (file.mimeType === "image/*") {
-        // Handle Text Extraction using Tesseract.js for OCR
-        // UpdateText variable
-      }
+      // Extract text from file using AWS Textract using AWS SDK
 
       // Match Regex Patterns to extract relevant Info from the text (using acquired token from req.body)
 
       // IF the Regex has a unknown match or confidence score < 0.8, use Gemini AI to extract the relevant information
 
       // Send information to Naming helper to get a structured file name
-
-      // Upload file to AWS S3 using AWS SDK
 
       // Push the document to processedFiles array
     });
