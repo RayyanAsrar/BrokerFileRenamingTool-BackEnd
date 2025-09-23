@@ -1,4 +1,7 @@
 import CustomError from "http-errors";
+import * as S3Service from "../services/s3.service.js";
+
+const { uploadFile } = S3Service;
 
 const uploadController = {
   uploadFiles: async (req, res) => {
@@ -9,7 +12,7 @@ const uploadController = {
 
     const processedFiles = [];
 
-    files.forEach((file) => {
+    files.forEach(async (file) => {
       if (
         !file.mimetype.startsWith("image/") &&
         file.mimetype !== "application/pdf"
@@ -31,6 +34,14 @@ const uploadController = {
 
       // Upload file to AWS S3 using AWS SDK
 
+      const fileData = {
+        name: file.originalname,
+        contentType: file.mimetype,
+        body: file.buffer,
+      };
+
+      const {key} = await uploadFile(fileData);
+
       // Extract text from file using AWS Textract using AWS SDK
 
       // Match Regex Patterns to extract relevant Info from the text (using acquired token from req.body)
@@ -40,6 +51,19 @@ const uploadController = {
       // Send information to Naming helper to get a structured file name
 
       // Push the document to processedFiles array
+
+      const fileDoc = {
+        originalName: file.originalname,
+        size: file.size,
+        contentType: file.mimetype,
+        key: key,
+        // NewName
+        // Status
+        // ConfidenceScore
+        // Review
+      };
+
+      processedFiles.push(fileDoc);
     });
 
     // Use insertMany to add all processed files to MongoDB in one go

@@ -2,10 +2,10 @@ import { Schema, model } from "mongoose";
 
 const fileSchema = new Schema(
   {
-    oldName: { type: String, required: true },
+    originalName: { type: String, required: true },
     newName: { type: String, required: true },
     size: { type: Number, required: true },
-    type: { type: String, required: true },
+    contentType: { type: String, required: true },
     key: { type: String, default: null },
     status: {
       type: String,
