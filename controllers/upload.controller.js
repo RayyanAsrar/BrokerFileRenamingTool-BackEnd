@@ -6,6 +6,7 @@ const { uploadFile } = S3Service;
 const { processImage, processPdf } = TextractService;
 
 // TODO: Remove debug logs before production
+// TODO: Request Body Validation for token and other params
 
 const uploadController = {
   uploadFiles: async (req, res) => {
