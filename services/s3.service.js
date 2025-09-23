@@ -1,4 +1,5 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import CustomError from "http-errors";
 import env from "../config/env.js";
 import s3 from "../config/s3.js";
 
@@ -27,9 +28,11 @@ export const uploadFile = async ({ name, body, contentType }) => {
 
   try {
     const response = await s3.send(new PutObjectCommand(params));
+    console.log(`File uploaded successfully to S3: ${key}`);
 
-    return {key, ...response};
+    return { key, ...response };
   } catch (error) {
+    console.error(`Error uploading file to S3:`, error);
     throw CustomError(500, error.message);
   }
 };

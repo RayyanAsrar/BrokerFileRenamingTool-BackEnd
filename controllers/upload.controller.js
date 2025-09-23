@@ -1,7 +1,11 @@
 import CustomError from "http-errors";
 import * as S3Service from "../services/s3.service.js";
+import * as TextractService from "../services/textract.service.js";
 
 const { uploadFile } = S3Service;
+const { processImage, processPdf } = TextractService;
+
+// TODO: Remove debug logs before production
 
 const uploadController = {
   uploadFiles: async (req, res) => {
@@ -12,7 +16,7 @@ const uploadController = {
 
     const processedFiles = [];
 
-    files.forEach(async (file) => {
+    for (const file of files) {
       if (
         !file.mimetype.startsWith("image/") &&
         file.mimetype !== "application/pdf"
@@ -30,8 +34,6 @@ const uploadController = {
         );
       }
 
-      let text;
-
       // Upload file to AWS S3 using AWS SDK
 
       const fileData = {
@@ -40,9 +42,23 @@ const uploadController = {
         body: file.buffer,
       };
 
-      const {key} = await uploadFile(fileData);
+      const { key } = await uploadFile(fileData);
+      console.log(`File uploaded to S3 with key: ${key}`);
+
+      // Small delay to ensure file is available in S3
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Extract text from file using AWS Textract using AWS SDK
+
+      let extractedData;
+
+      if (file.mimetype.startsWith("image/")) {
+        extractedData = await processImage(key);
+      }
+
+      if (file.mimetype === "application/pdf") {
+        extractedData = await processPdf(key);
+      }
 
       // Match Regex Patterns to extract relevant Info from the text (using acquired token from req.body)
 
@@ -64,7 +80,7 @@ const uploadController = {
       };
 
       processedFiles.push(fileDoc);
-    });
+    }
 
     // Use insertMany to add all processed files to MongoDB in one go
 
