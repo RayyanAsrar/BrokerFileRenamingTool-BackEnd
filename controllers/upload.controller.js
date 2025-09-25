@@ -46,9 +46,6 @@ const uploadController = {
       const { key } = await uploadFile(fileData);
       console.log(`File uploaded to S3 with key: ${key}`);
 
-      // Small delay to ensure file is available in S3
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       // Extract text from file using AWS Textract using AWS SDK
 
       let extractedData;
