@@ -6,6 +6,7 @@ import * as MetaDataService from "../services/metadata.service.js";
 import validate from "../utils/validation.js";
 import { uploadSchema } from "../schemas/upload.schema.js";
 import File from "../models/file.model.js";
+import {generateFileName} from "../utils/namingHelper.js"
 
 const { uploadFile } = S3Service;
 const { processImage, processPdf } = TextractService;
@@ -107,7 +108,10 @@ const uploadController = {
 
       // Match Regex Patterns to extract relevant Info from the text (using acquired token from req.body)
 
-      const metadata = extractMetadata(extractedText, value);
+      const metadata = extractMetadata(extractedText, {
+        ...value,
+        fileExtension: file.originalName.split(".")[1],
+      });
 
       // Send information to Naming helper to get a structured file name
 

@@ -22,7 +22,7 @@ function detectDocType(text) {
 
 // Metadata extractor with confidence
 export function extractMetadata(text, data) {
-  const { clientName, subClientName } = data;
+  const { clientName, subClientName, fileExtension } = data;
 
   const date = (text.match(dateRegex) || [null])[0];
   const period = (text.match(periodRegex) || [null])[0];
@@ -35,6 +35,7 @@ export function extractMetadata(text, data) {
       ? subClientName
       : null;
   const docType = detectDocType(text);
+  const extentionname = fileExtension;
 
   const metadata = {
     date: { value: date, confidence: date ? 1 : -0.2 },
@@ -43,6 +44,7 @@ export function extractMetadata(text, data) {
     client: { value: client, confidence: client ? 1 : -0.2 },
     subClientName: { value: subClient, confidence: subClient ? 1 : -0.2 },
     docType: { value: docType, confidence: docType ? 1 : -0.2 },
+    extentionname: { value: extentionname, confidence: extentionname ? 1 : -0.2 },
   };
 
   const confidenceValues = Object.values(metadata).map((f) => f.confidence);
