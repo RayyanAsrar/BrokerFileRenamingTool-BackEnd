@@ -2,16 +2,27 @@ import CustomError from "http-errors";
 import * as S3Service from "../services/s3.service.js";
 import * as TextractService from "../services/textract.service.js";
 import * as PDFExtractionService from "../services/pdfExtraction.service.js";
+import * as MetaDataService from "../services/metadata.service.js";
+import validate from "../utils/validation.js";
+import { uploadSchema } from "../schemas/upload.schema.js";
+import File from "../models/file.model.js";
 
 const { uploadFile } = S3Service;
 const { processImage, processPdf } = TextractService;
 const { parsePDF } = PDFExtractionService;
+const { extractMetadata } = MetaDataService;
 
 // TODO: Remove debug logs before production
 // TODO: Request Body Validation for token and other params
 
 const uploadController = {
   uploadFiles: async (req, res) => {
+    const { value, error } = validate(uploadSchema, req.body);
+
+    if (error) {
+      throw CustomError(400, error.details[0].message);
+    }
+
     const files = req.files;
     if (!files || files.length === 0) {
       throw CustomError(400, "No files uploaded");
@@ -95,29 +106,39 @@ const uploadController = {
       }
 
       // Match Regex Patterns to extract relevant Info from the text (using acquired token from req.body)
-      // IF the Regex has a unknown match or confidence score < 0.8, use Gemini AI to extract the relevant information
+
+      const metadata = extractMetadata(extractedText, value);
+
       // Send information to Naming helper to get a structured file name
+
+      const { template } = value;
+
+      const newName = generateFileName(template, metadata);
+
       // Push the document to processedFiles array
 
       processedFiles.push({
         fileKey: file.key,
+        newName,
         originalName: file.originalName,
         contentType: file.contentType,
         size: file.size,
         extractedText,
+        status: "processed",
+        confidenceScore: metadata.totalConfidence,
+        review: metadata.totalConfidence < 0.8,
       });
-
     }
-    
+
     // Use insertMany to add all processed files to MongoDB in one go
-    
+
+    const finalFiles = await File.insertMany(processedFiles);
+
     // Return response with number of files uploaded and their details
 
     console.log("Sending");
 
-    return res
-      .status(200)
-      .json({ number: files.length, files: processedFiles });
+    return res.status(200).json({ number: files.length, files: finalFiles });
   },
 };
 
