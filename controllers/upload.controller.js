@@ -6,7 +6,8 @@ import * as MetaDataService from "../services/metadata.service.js";
 import validate from "../utils/validation.js";
 import { uploadSchema } from "../schemas/upload.schema.js";
 import File from "../models/file.model.js";
-import {generateFileName} from "../utils/namingHelper.js"
+import { generateFileName } from "../utils/namingHelper.js";
+import { APIResponse } from "../utils/response.js";
 
 const { uploadFile } = S3Service;
 const { processImage, processPdf } = TextractService;
@@ -142,7 +143,14 @@ const uploadController = {
 
     console.log("Sending");
 
-    return res.status(200).json({ number: files.length, files: finalFiles });
+    return res
+      .status(200)
+      .json(
+        new APIResponse("Files uploaded and processed successfully", {
+          number: files.length,
+          files: finalFiles,
+        })
+      );
   },
 };
 
