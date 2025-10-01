@@ -1,21 +1,18 @@
 import CustomError from "http-errors";
+import File from "../models/file.model.js";
+import { uploadSchema } from "../schemas/file.schema.js";
+import * as MetaDataService from "../services/metadata.service.js";
+import * as PDFExtractionService from "../services/pdfExtraction.service.js";
 import * as S3Service from "../services/s3.service.js";
 import * as TextractService from "../services/textract.service.js";
-import * as PDFExtractionService from "../services/pdfExtraction.service.js";
-import * as MetaDataService from "../services/metadata.service.js";
-import validate from "../utils/validation.js";
-import { uploadSchema } from "../schemas/upload.schema.js";
-import File from "../models/file.model.js";
 import { generateFileName } from "../utils/namingHelper.js";
 import { APIResponse } from "../utils/response.js";
+import validate from "../utils/validation.js";
 
 const { uploadFile } = S3Service;
 const { processImage, processPdf } = TextractService;
 const { parsePDF } = PDFExtractionService;
 const { extractMetadata } = MetaDataService;
-
-// TODO: Remove debug logs before production
-// TODO: Request Body Validation for token and other params
 
 const uploadController = {
   uploadFiles: async (req, res) => {
@@ -37,8 +34,6 @@ const uploadController = {
     const uploadedFiles = await Promise.all(
       files.map(async (file) => {
         // Check for initial file type and size constraints
-
-        console.log("Processing file:", file.originalname);
 
         if (
           !file.mimetype.startsWith("image/") &&
@@ -65,8 +60,6 @@ const uploadController = {
 
         const { key } = await uploadFile(fileData);
 
-        console.log(`Uploaded file to S3: ${file.originalname} as ${key}`);
-
         return {
           key,
           originalName: file.originalname,
@@ -84,8 +77,6 @@ const uploadController = {
 
       if (file.contentType === "application/pdf") {
         extractedText = await parsePDF(file.body);
-
-        console.log(`Extracted text from PDF: ${file.originalName}`);
       }
 
       // IF THERE IS NO TEXT, THEN AS FALLBACK GO FOR AWS TEXTRACT
@@ -93,17 +84,10 @@ const uploadController = {
       if (!extractedText || extractedText.trim().length === 0) {
         if (!file.contentType.startsWith("image/")) {
           extractedText = await processPdf(file.key);
-          console.log(
-            `Extracted text from PDF using Textract: ${file.originalName}`
-          );
         }
 
         if (file.contentType.startsWith("image/")) {
           extractedText = await processImage(file.key);
-
-          console.log(
-            `Extracted text from Image using Textract: ${file.originalName}`
-          );
         }
       }
 
@@ -141,16 +125,12 @@ const uploadController = {
 
     // Return response with number of files uploaded and their details
 
-    console.log("Sending");
-
-    return res
-      .status(200)
-      .json(
-        new APIResponse("Files uploaded and processed successfully", {
-          number: files.length,
-          files: finalFiles,
-        })
-      );
+    return res.status(200).json(
+      new APIResponse("Files uploaded and processed successfully", {
+        number: files.length,
+        files: finalFiles,
+      })
+    );
   },
 };
 

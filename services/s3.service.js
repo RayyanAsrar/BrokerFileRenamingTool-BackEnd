@@ -1,4 +1,4 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import CustomError from "http-errors";
 import env from "../config/env.js";
 import s3 from "../config/s3.js";
@@ -33,6 +33,47 @@ export const uploadFile = async ({ name, body, contentType }) => {
     return { key, ...response };
   } catch (error) {
     console.error(`Error uploading file to S3:`, error);
+    throw CustomError(500, error.message);
+  }
+};
+
+export const getFileStream = async (key) => {
+  if (!key) {
+    throw CustomError(400, "S3 key is required to fetch file");
+  }
+
+  const params = {
+    Bucket: S3_BUCKET,
+    Key: key,
+  };
+
+  try {
+    const data = await s3.getObject(params).createReadStream();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching file from S3:`, error);
+    throw CustomError(500, error.message);
+  }
+};
+
+export const deleteFiles = async (keys) => {
+  if (!keys || !Array.isArray(keys) || keys.length === 0) {
+    throw CustomError(400, "Array of S3 keys is required to delete files");
+  }
+
+  const objects = keys.map((key) => ({ Key: key }));
+
+  const deleteCommand = new DeleteObjectsCommand({
+    Bucket: S3_BUCKET,
+    Delete: { Objects: objects, Quiet: false },
+  });
+
+  try {
+    const response = await s3.send(deleteCommand);
+    console.log(`Deleted ${response.Deleted.length} files from S3`);
+    return response;
+  } catch (error) {
+    console.error(`Error deleting files from S3:`, error);
     throw CustomError(500, error.message);
   }
 };

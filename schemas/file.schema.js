@@ -11,3 +11,7 @@ export const renameSchema = joi.object({
   newName: joi.string().min(1).max(255).required(),
   oldName: joi.string().min(1).max(255).required(),
 });
+
+export const downloadSchema = joi.object({
+  files: joi.array().items(joi.string().required()).min(1).required(),
+})
