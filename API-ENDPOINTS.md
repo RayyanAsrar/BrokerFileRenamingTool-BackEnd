@@ -10,12 +10,268 @@ http://localhost:3000/api
 
 ## Table of Contents
 
-1. [Authentication Endpoints](#authentication-endpoints)
-2. [User Endpoints](#user-endpoints)
-3. [Upload Endpoints](#upload-endpoints)
-4. [File Endpoints](#file-endpoints)
-5. [Response Format](#response-format)
-6. [Error Handling](#error-handling)
+1. [Getting Started](#getting-started)
+2. [Authentication Endpoints](#authentication-endpoints)
+3. [User Endpoints](#user-endpoints)
+4. [Upload Endpoints](#upload-endpoints)
+5. [File Endpoints](#file-endpoints)
+6. [Response Format](#response-format)
+7. [Error Handling](#error-handling)
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+Before starting the backend server, ensure you have the following installed:
+
+- **Node.js** (v14 or higher)
+- **MongoDB** (running locally or MongoDB Atlas account)
+- **AWS Account** with S3 and Textract services configured
+
+### Installation Steps
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/RayyanAsrar/BrokerFileRenamingTool-BackEnd.git
+cd BrokerFileRenamingTool-BackEnd
+```
+
+#### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+The following packages will be installed:
+
+- `express` - Web framework
+- `mongoose` - MongoDB ODM
+- `bcrypt` - Password hashing
+- `jsonwebtoken` - JWT authentication
+- `joi` - Validation
+- `multer` - File upload handling
+- `@aws-sdk/client-s3` - AWS S3 client
+- `@aws-sdk/client-textract` - AWS Textract client
+- `pdf-extraction` - PDF text extraction
+- `archiver` - ZIP file creation
+- `cors`, `helmet`, `morgan` - Middleware
+
+#### 3. Environment Configuration
+
+Create a `.env` file in the root directory with the following variables: The .env file will be sent through gmail.
+
+```env
+# Server Configuration
+PORT=5000
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017/broker-file-renaming
+# Or for MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/broker-file-renaming
+
+# JWT Configuration
+JWT_SECRET=your_super_secret_jwt_key_here_change_this_in_production
+
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_aws_access_key_id
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
+S3_BUCKET=your-s3-bucket-name
+```
+
+**Important Security Notes:**
+
+- Never commit the `.env` file to version control (it's already in `.gitignore`)
+- Use strong, unique values for `JWT_SECRET` in production
+- Keep AWS credentials secure and use IAM roles when possible
+
+#### 4. AWS S3 Bucket Setup
+
+1. Create an S3 bucket in your AWS account
+2. Configure bucket permissions to allow:
+   - PutObject (for file uploads)
+   - GetObject (for file downloads)
+   - DeleteObject (for file cleanup)
+3. Update the `S3_BUCKET` variable in `.env` with your bucket name
+
+#### 5. AWS Textract Configuration
+
+Ensure your AWS credentials have permissions for:
+
+- `textract:DetectDocumentText` (for images)
+- `textract:StartDocumentTextDetection` (for PDFs)
+- `textract:GetDocumentTextDetection` (for PDFs)
+
+
+
+### Starting the Server
+
+#### Development Mode (with auto-restart)
+
+```bash
+npm start
+```
+
+This runs the server with **nodemon**, which automatically restarts when you make changes to the code.
+
+#### Production Mode
+
+```bash
+node index.js
+```
+
+### Verify Server is Running
+
+You should see output similar to:
+
+```
+MongoDB connected: cluster0-shard-00-00.xxxxx.mongodb.net
+Server is running on port 3000
+```
+
+### Test the Server
+
+1. **Health Check**
+
+```bash
+curl http://localhost:3000/
+```
+
+Expected response:
+
+```
+Hello World!
+```
+
+2. **API Test - Register a User**
+
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"testuser\",\"email\":\"test@example.com\",\"password\":\"password123\"}"
+```
+
+Expected response:
+
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "userId": "507f1f77bcf86cd799439011"
+  }
+}
+```
+
+### Project Structure
+
+```
+BrokerFileRenamingTool-BackEnd/
+├── config/           # Configuration files (DB, S3, Textract, env)
+├── controllers/      # Request handlers
+├── middlewares/      # Auth, upload, error middleware
+├── models/           # MongoDB schemas (User, File)
+├── routes/           # API route definitions
+├── schemas/          # Joi validation schemas
+├── services/         # Business logic (S3, Textract, metadata extraction)
+├── utils/            # Helper functions (token, validation, response)
+├── app.js            # Express app configuration
+├── index.js          # Server entry point
+├── package.json      # Dependencies and scripts
+└── .env              # Environment variables (not in repo)
+```
+
+### Common Issues & Troubleshooting
+
+#### 1. MongoDB Connection Error
+
+```
+Error: MONGODB_URI is not defined in environment variables
+```
+
+**Solution:** Ensure `.env` file exists and `MONGODB_URI` is set correctly.
+
+#### 2. AWS Credentials Error
+
+```
+Error: The Credentials are not provided
+```
+
+**Solution:** Check that `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` are set in `.env`.
+
+#### 3. JWT Secret Missing
+
+```
+Error: JWT_SECRET is not defined in the environment variables
+```
+
+**Solution:** Add `JWT_SECRET=your_secret_key` to `.env`.
+
+#### 4. Port Already in Use
+
+```
+Error: listen EADDRINUSE: address already in use :::3000
+```
+
+**Solution:** Either kill the process using port 3000 or change the `PORT` in `.env`.
+
+**Windows PowerShell:**
+
+```powershell
+# Find the process using port 3000
+netstat -ano | findstr :3000
+
+# Kill the process (replace PID with the actual process ID)
+taskkill /PID <PID> /F
+```
+
+**Linux/macOS:**
+
+```bash
+# Find and kill the process
+lsof -ti:3000 | xargs kill -9
+```
+
+#### 5. File Upload Fails
+
+- Check S3 bucket permissions
+- Verify AWS credentials have proper IAM permissions
+- Ensure bucket name in `.env` matches your S3 bucket
+
+### Development Tools
+
+#### Recommended VS Code Extensions
+
+- REST Client or Thunder Client (for API testing)
+- MongoDB for VS Code
+- ESLint
+- Prettier
+
+#### Testing with Postman
+
+Import the following base URL and start testing endpoints:
+
+- Base URL: `http://localhost:3000/api`
+- Use the examples provided in each endpoint section below
+
+### API Rate Limits
+
+Currently, there are no rate limits implemented. Consider adding rate limiting middleware like `express-rate-limit` for production.
+
+### CORS Configuration
+
+CORS is enabled for all origins in development. For production, update the CORS configuration in `app.js`:
+
+```javascript
+app.use(
+  cors({
+    origin: "https://your-frontend-domain.com",
+  })
+);
+```
 
 ---
 
