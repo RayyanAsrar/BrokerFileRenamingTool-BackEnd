@@ -2,6 +2,9 @@ import CustomError from "http-errors";
 import { uploadSchema } from "../schemas/file.schema.js";
 import * as S3Service from "../services/s3.service.js";
 import validate from "../utils/validation.js";
+import { generateFileNames } from "../services/gemini.service.js";
+import File from "../models/file.model.js";
+import { APIResponse } from "../utils/response.js";
 
 const { uploadFile } = S3Service;
 
@@ -14,6 +17,8 @@ const uploadController = {
     }
 
     const files = req.files;
+
+    console.log("Received Files:", files);
     if (!files || files.length === 0) {
       throw CustomError(400, "No files uploaded");
     }
@@ -53,16 +58,45 @@ const uploadController = {
 
         return {
           key,
-          originalName: file.originalname,
-          contentType: file.mimetype,
+          originalName: fileData.name,
+          contentType: fileData.contentType,
           size: file.size,
-          body: file.buffer,
+          body: fileData.body,
         };
       })
     );
 
-    
-   
+    const GeminiResponse = await generateFileNames(
+      uploadedFiles,
+      value.template,
+      value.clientName,
+      value.subClientName
+    );
+
+    const renamedFiles = JSON.parse(GeminiResponse);
+
+    const fileDocuments = uploadedFiles.map((file) => {
+      const renamedFile = renamedFiles.find(
+        (rf) => rf.originalName === file.originalName
+      );
+
+      return {
+        originalName: file.originalName,
+        newName: renamedFile ? renamedFile.newName : file.originalName,
+        size: file.size,
+        contentType: file.contentType,
+        key: file.key,
+        confidenceScore: renamedFile ? renamedFile.confidence : null,
+        status: renamedFile ? "processed" : "failed",
+        review: renamedFile && renamedFile.confidence < 0.8,
+      };
+    });
+
+    const fileRecords = await File.insertMany(fileDocuments);
+
+    return res
+      .status(200)
+      .json(new APIResponse("Files uploaded successfully", fileRecords));
   },
 };
 
