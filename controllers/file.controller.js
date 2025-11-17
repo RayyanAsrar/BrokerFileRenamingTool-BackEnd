@@ -34,7 +34,7 @@ const fileController = {
 
     const { files } = value;
 
-    const fileRecords = await File.find({ _id: { $in: files } });
+    const fileRecords = await File.find({_id: {$in: files}});
     if (fileRecords.length === 0) throw CustomError(404, "No files found");
 
     // Create archive
