@@ -5,6 +5,7 @@ export const uploadSchema = joi.object({
   totalFiles: joi.number().integer().min(1).required(),
   clientName: joi.string().required(),
   subClientName: joi.string().optional(),
+  files: joi.any(),
 });
 
 export const renameSchema = joi.object({
