@@ -17,7 +17,7 @@ const fileController = {
 
     const updatedFile = await File.findByIdAndUpdate(
       fileID,
-      { newName },
+      { newName, editedManually: true },
       { new: true }
     );
 

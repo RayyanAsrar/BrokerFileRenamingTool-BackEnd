@@ -89,6 +89,9 @@ const uploadController = {
         confidenceScore: renamedFile ? renamedFile.confidence : null,
         status: renamedFile ? "processed" : "failed",
         review: renamedFile && renamedFile.confidence < 0.8,
+        date: renamedFile ? renamedFile.date : null,
+        issuer: renamedFile ? renamedFile.issuer : null,
+        docType: renamedFile ? renamedFile.docType : null,
       };
     });
 

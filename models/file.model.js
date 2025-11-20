@@ -14,6 +14,10 @@ const fileSchema = new Schema(
     },
     confidenceScore: { type: Number, default: null },
     review: { type: Boolean, default: false },
+    date: {type: String, default: null},
+    issuer: {type: String, default: null},
+    docType: {type: String, default: null},
+    editedManually: { type: Boolean, default: false },
   },
   {
     timestamps: true,
