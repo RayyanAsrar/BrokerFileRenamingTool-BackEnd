@@ -6,8 +6,6 @@ const uploadRouter = Router();
 
 const { uploadFiles } = uploadController;
 
-uploadRouter.use(uploadMulti);
-
-uploadRouter.post("/", uploadFiles);
+uploadRouter.post("/", uploadMulti, uploadFiles);
 
 export default uploadRouter;

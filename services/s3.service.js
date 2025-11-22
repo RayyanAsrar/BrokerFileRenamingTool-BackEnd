@@ -1,4 +1,8 @@
-import { DeleteObjectsCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
 import CustomError from "http-errors";
 import env from "../config/env.js";
 import s3 from "../config/s3.js";
@@ -48,8 +52,8 @@ export const getFileStream = async (key) => {
   };
 
   try {
-    const data = await s3.getObject(params).createReadStream();
-    return data;
+    const response = await s3.send(new GetObjectCommand(params));
+    return response.Body;
   } catch (error) {
     console.error(`Error fetching file from S3:`, error);
     throw CustomError(500, error.message);
